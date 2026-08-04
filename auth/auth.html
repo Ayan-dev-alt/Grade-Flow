@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8">
+
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1.0">
+
+        <title>GradeFlow | Authentication</title>
+
+        <!-- Google Font -->
+
+        <link rel="preconnect"
+            href="https://fonts.googleapis.com">
+
+        <link rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossorigin>
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+            rel="stylesheet">
+
+        <!-- Tailwind -->
+
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <!-- Lucide -->
+
+        <script src="https://unpkg.com/lucide@latest"></script>
+
+        <!-- CSS -->
+
+        <link rel="stylesheet"
+            href="../assets/css/auth.css">
+
+    </head>
+
+    <body>
+
+        <main class="auth-page">
+
+            <!-- Floating Background -->
+
+            <div class="bg-shape shape-1"></div>
+
+            <div class="bg-shape shape-2"></div>
+
+            <div class="bg-shape shape-3"></div>
+
+            <div class="bg-grid"></div>
+
+            <!-- Main Card -->
+
+            <section class="auth-wrapper">
+
+                <!-- Left Panel -->
+
+                <div class="auth-panel message-panel">
+
+                    <div class="panel-content">
+
+                        <!-- Logo -->
+
+                        <a href="../index.html"
+                            class="logo">
+
+                            <div class="logo-icon">
+
+                                <i data-lucide="graduation-cap"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h2>GradeFlow</h2>
+
+                                <span>Teacher Result Manager</span>
+
+                            </div>
+
+                        </a>
+
+                        <!-- Hero -->
+
+                        <div class="hero-message">
+
+                            <span class="badge">
+
+                                🚀 Smart Academic Platform
+
+                            </span>
+
+                            <h1 class="hero-title" id="authTitle">
+
+                                Welcome to
+
+                                <span>GradeFlow</span>
+
+                            </h1>
+
+                            <p class="hero-description" id="authDescription">
+
+                                Create student results, calculate grades,
+                                generate rankings and export professional
+                                reports in just a few clicks.
+
+                            </p>
+
+                        </div>
+
+                        <!-- Features -->
+
+                        <div class="hero-features">
+
+                            <div class="feature">
+
+                                <div class="feature-icon">
+
+                                    <i data-lucide="sparkles"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h4>
+
+                                        Smart Automation
+
+                                    </h4>
+
+                                    <p>
+
+                                        Automatic calculations with zero
+                                        manual work.
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            <div class="feature">
+
+                                <div class="feature-icon">
+
+                                    <i data-lucide="shield-check"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h4>
+
+                                        Secure Dashboard
+
+                                    </h4>
+
+                                    <p>
+
+                                        Future-ready architecture for
+                                        database integration.
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            <div class="feature">
+
+                                <div class="feature-icon">
+
+                                    <i data-lucide="bar-chart-3"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h4>
+
+                                        Performance Insights
+
+                                    </h4>
+
+                                    <p>
+
+                                        Track progress through reports,
+                                        analytics and class statistics.
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+                <!-- Right Panel -->
+
+                <div class="auth-panel form-panel">
+
+                    <!-- Switch -->
+
+                    <div class="form-switch">
+
+                        <button
+                            id="loginSwitch"
+                            class="switch-btn active"
+                            type="button">
+
+                            Login
+
+                        </button>
+
+                        <button
+                            id="signupSwitch"
+                            class="switch-btn"
+                            type="button">
+
+                            Create Account
+
+                        </button>
+
+                    </div>
+
+                    <!-- LOGIN FORM -->
+
+                    <form
+                        id="loginForm"
+                        class="auth-form active"
+                        novalidate>
+
+                        <div class="form-header">
+
+                            <span class="form-badge">
+
+                                Welcome Back 👋
+
+                            </span>
+
+                            <h2 class="form-title">
+
+                                Sign In
+
+                            </h2>
+
+                            <p class="form-description">
+
+                                Login to continue managing your
+                                students and academic reports.
+
+                            </p>
+
+                        </div>
+
+                        <!-- Email -->
+
+                        <div class="input-group">
+
+                            <label>
+
+                                Email Address
+
+                            </label>
+
+                            <div class="input-box">
+
+                                <i data-lucide="mail"></i>
+
+                                <input
+                                    type="email"
+                                    id="loginEmail"
+                                    name="email"
+                                    placeholder="teacher@example.com"
+                                    autocomplete="email"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Password -->
+
+                        <div class="input-group">
+
+                            <label>
+
+                                Password
+
+                            </label>
+
+                            <div class="input-box">
+
+                                <i data-lucide="lock"></i>
+
+                                <input
+                                    type="password"
+                                    id="loginPassword"
+                                    name="password"
+                                    placeholder="Enter password"
+                                    autocomplete="current-password"
+                                    required>
+
+                                <button
+                                    class="password-toggle"
+                                    type="button">
+
+                                    <i data-lucide="eye"></i>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Remember -->
+
+                        <div class="form-options">
+
+                            <label class="remember">
+
+                                <input
+                                    type="checkbox"
+                                    id="rememberMe">
+
+                                <span>
+
+                                    Remember Me
+
+                                </span>
+
+                            </label>
+
+                            <button
+                                type="button"
+                                class="forgot-password">
+
+                                Forgot Password?
+
+                            </button>
+
+                        </div>
+
+                        <!-- Login Button -->
+
+                        <button
+                            class="submit-btn"
+                            type="submit">
+
+                            <span>
+
+                                Login
+
+                            </span>
+
+                            <i
+                                data-lucide="arrow-right"></i>
+
+                        </button>
+
+                        <!-- Bottom -->
+
+                        <div class="bottom-text">
+
+                            Don't have an account?
+
+                            <button
+                                type="button"
+                                class="bottom-link"
+                                id="gotoSignup">
+
+                                Create One
+
+                            </button>
+
+                        </div>
+
+                    </form>
+                    <!-- SIGNUP FORM -->
+
+                    <form
+                        id="signupForm"
+                        class="auth-form"
+                        novalidate>
+
+                        <div class="form-header">
+
+                            <span class="form-badge">
+
+                                🚀 Join GradeFlow
+
+                            </span>
+
+                            <h2 class="form-title">
+
+                                Create Account
+
+                            </h2>
+
+                            <p class="form-description">
+
+                                Build your teacher account and start
+                                managing student results professionally.
+
+                            </p>
+
+                        </div>
+
+                        <!-- Full Name -->
+
+                        <div class="input-group">
+
+                            <label>
+
+                                Full Name
+
+                            </label>
+
+                            <div class="input-box">
+
+                                <i data-lucide="user"></i>
+
+                                <input
+                                    type="text"
+                                    id="signupName"
+                                    name="name"
+                                    placeholder="Muhammad Ali"
+                                    autocomplete="name"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Email -->
+
+                        <div class="input-group">
+
+                            <label>
+
+                                Email Address
+
+                            </label>
+
+                            <div class="input-box">
+
+                                <i data-lucide="mail"></i>
+
+                                <input
+                                    type="email"
+                                    id="signupEmail"
+                                    name="email"
+                                    placeholder="teacher@example.com"
+                                    autocomplete="email"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Password -->
+
+                        <div class="input-group">
+
+                            <label>
+
+                                Password
+
+                            </label>
+
+                            <div class="input-box">
+
+                                <i data-lucide="lock"></i>
+
+                                <input
+                                    type="password"
+                                    id="signupPassword"
+                                    name="password"
+                                    placeholder="Create Password"
+                                    autocomplete="new-password"
+                                    required>
+
+                                <button
+                                    class="password-toggle"
+                                    type="button">
+
+                                    <i data-lucide="eye"></i>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Confirm Password -->
+
+                        <div class="input-group">
+
+                            <label>
+
+                                Confirm Password
+
+                            </label>
+
+                            <div class="input-box">
+
+                                <i data-lucide="shield-check"></i>
+
+                                <input
+                                    type="password"
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    placeholder="Confirm Password"
+                                    autocomplete="new-password"
+                                    required>
+
+                                <button
+                                    class="password-toggle"
+                                    type="button">
+
+                                    <i data-lucide="eye"></i>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Terms -->
+
+                        <div class="form-options">
+
+                            <label class="remember">
+
+                                <input
+                                    type="checkbox"
+                                    id="acceptTerms"
+                                    required>
+
+                                <span>
+
+                                    I agree to the Terms &
+                                    Privacy Policy
+
+                                </span>
+
+                            </label>
+
+                        </div>
+
+                        <!-- Signup Button -->
+
+                        <button
+                            class="submit-btn"
+                            type="submit">
+
+                            <span>
+
+                                Create Account
+
+                            </span>
+
+                            <i
+                                data-lucide="user-plus"></i>
+
+                        </button>
+
+                        <!-- Bottom -->
+
+                        <div class="bottom-text">
+
+                            Already have an account?
+
+                            <button
+                                type="button"
+                                class="bottom-link"
+                                id="gotoLogin">
+
+                                Sign In
+
+                            </button>
+
+                        </div>
+
+                    </form>
+                    <!--=====================================
+                        FORGOT PASSWORD MODAL
+                ======================================-->
+
+                    <div
+                        class="modal-overlay"
+                        id="forgotPasswordModal"
+                        aria-hidden="true">
+
+                        <div
+                            class="forgot-modal"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="forgotModalTitle">
+
+                            <button
+                                type="button"
+                                class="modal-close"
+                                id="closeForgotModal"
+                                aria-label="Close forgot password dialog">
+
+                                <i data-lucide="x"></i>
+
+                            </button>
+
+                            <div class="modal-icon">
+
+                                <i data-lucide="key-round"></i>
+
+                            </div>
+
+                            <div class="modal-header">
+
+                                <span class="form-badge">
+
+                                    Account Recovery
+
+                                </span>
+
+                                <h2 id="forgotModalTitle">
+
+                                    Forgot Password?
+
+                                </h2>
+
+                                <p>
+
+                                    Enter your registered email address.
+                                    We will prepare the password recovery
+                                    process for your account.
+
+                                </p>
+
+                            </div>
+
+                            <form
+                                id="forgotPasswordForm"
+                                novalidate>
+
+                                <div class="input-group">
+
+                                    <label for="forgotEmail">
+
+                                        Email Address
+
+                                    </label>
+
+                                    <div class="input-box">
+
+                                        <i data-lucide="mail"></i>
+
+                                        <input
+                                            type="email"
+                                            id="forgotEmail"
+                                            name="email"
+                                            placeholder="teacher@example.com"
+                                            autocomplete="email"
+                                            required>
+
+                                    </div>
+
+                                </div>
+                                <div class="otp-section hidden" id="otpSection">
+
+                                    <div class="input-group">
+
+                                        <label for="otpCode">
+
+                                            Verification Code
+
+                                        </label>
+
+                                        <div class="input-box">
+
+                                            <i data-lucide="shield-check"></i>
+
+                                            <input
+                                                type="text"
+                                                id="otpCode"
+                                                maxlength="6"
+                                                placeholder="Enter 6-digit code">
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <div class="password-reset-section hidden"
+                                    id="passwordResetSection">
+
+                                    <div class="input-group">
+
+                                        <label for="newPassword">
+
+                                            New Password
+
+                                        </label>
+
+                                        <div class="input-box">
+
+                                            <i data-lucide="lock"></i>
+
+                                            <input
+                                                type="password"
+                                                id="newPassword"
+                                                placeholder="Enter new password">
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="input-group">
+
+                                        <label for="confirmNewPassword">
+
+                                            Confirm Password
+
+                                        </label>
+
+                                        <div class="input-box">
+
+                                            <i data-lucide="lock"></i>
+
+                                            <input
+                                                type="password"
+                                                id="confirmNewPassword"
+                                                placeholder="Confirm password">
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    class="submit-btn">
+
+                                    <span>
+
+                                        Continue
+
+                                    </span>
+
+                                    <i data-lucide="arrow-right"></i>
+
+                                </button>
+
+                            </form>
+
+                            <button
+                                type="button"
+                                class="modal-back"
+                                id="backToLogin">
+
+                                <i data-lucide="arrow-left"></i>
+
+                                Back to Login
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!--=====================================
+                PAGE FLIP DECORATION
+        ======================================-->
+
+            <div
+                class="page-shadow"
+                aria-hidden="true">
+            </div>
+
+            <!--=====================================
+                LOADING OVERLAY
+        ======================================-->
+
+            <div
+                class="loading-overlay"
+                id="loadingOverlay"
+                aria-hidden="true">
+
+                <div class="loading-card">
+
+                    <div class="loader"></div>
+
+                    <p>
+
+                        Processing your request...
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <!--=====================================
+                TOAST NOTIFICATION
+        ======================================-->
+
+            <div
+                class="auth-toast"
+                id="authToast"
+                role="status"
+                aria-live="polite">
+
+                <div class="toast-icon">
+
+                    <i data-lucide="circle-check"></i>
+
+                </div>
+
+                <div class="toast-content">
+
+                    <h4 id="toastTitle">
+
+                        Success
+
+                    </h4>
+
+                    <p id="toastMessage">
+
+                        Your request was completed successfully.
+
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="toast-close"
+                    id="closeToast"
+                    aria-label="Close notification">
+
+                    <i data-lucide="x"></i>
+
+                </button>
+
+            </div>
+
+        </main>
+
+        <!--=====================================
+                JAVASCRIPT
+    ======================================-->
+
+        <script src="../assets/js/auth.js"></script>
+
+        <script>
+
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
+    </script>
+
+    </body>
+
+</html>

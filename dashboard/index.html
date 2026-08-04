@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>GradeFlow | Dashboard</title>
+
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <script src="https://unpkg.com/lucide@latest"></script>
+
+        <link rel="stylesheet" href="../assets/css/dashboard.css">
+
+    </head>
+
+    <body>
+        <header class="navbar">
+            <button
+                id="mobileMenuBtn"
+                class="mobile-menu-btn">
+
+                <i data-lucide="menu"></i>
+
+            </button>
+
+            <div class="navbar-left">
+
+                <div>
+
+                    <h2 id="pageTitle">
+
+                        Dashboard
+
+                    </h2>
+
+                    <p>
+
+                        Welcome back to GradeFlow
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="navbar-right">
+
+                <button class="icon-btn">
+
+                    <i data-lucide="search"></i>
+
+                </button>
+
+                <button class="icon-btn">
+
+                    <i data-lucide="bell"></i>
+
+                </button>
+
+                <div class="profile">
+
+                    <div class="profile-image">
+
+                        A
+
+                    </div>
+
+                    <div>
+
+                        <h4 id="teacherName">
+
+                            Administrator
+
+                        </h4>
+
+                        <span>
+
+                            Teacher
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <div class="dashboard">
+
+            <!-- Sidebar -->
+
+            <aside class="sidebar">
+
+                <div class="logo">
+
+                    <div class="logo-icon">
+
+                        <i data-lucide="graduation-cap"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2>GradeFlow</h2>
+
+                        <span>Teacher Panel</span>
+
+                    </div>
+
+                </div>
+                <button
+                    id="closeSidebar"
+                    class="close-sidebar-btn">
+
+                    <i data-lucide="x"></i>
+
+                </button>
+                <button
+                    class="sidebar-toggle"
+                    id="sidebarToggle">
+
+                    <i data-lucide="panel-left-close"></i>
+
+                </button>
+
+                <ul class="menu">
+
+                    <li class="menu-item active" data-view="dashboard">
+
+                        <a href="#">
+
+                            <i data-lucide="layout-dashboard"></i>
+
+                            <span>Dashboard</span>
+
+                        </a>
+
+                    </li>
+
+                    <li class="menu-item" data-view="students">
+
+                        <a href="#" id="studentsNav">
+
+                            <i data-lucide="users"></i>
+
+                            <span>Students</span>
+
+                        </a>
+
+                    </li>
+
+                    <li class="menu-item" data-view="results">
+
+                        <a href="#">
+
+                            <i data-lucide="clipboard-list"></i>
+
+                            <span>Results</span>
+
+                        </a>
+
+                    </li>
+
+                    <li class="menu-item" data-view="reports">
+
+                        <a href="#">
+
+                            <i data-lucide="file-text"></i>
+
+                            <span>Reports</span>
+
+                        </a>
+
+                    </li>
+
+                    <li class="menu-item" data-view="settings">
+
+                        <a href="#">
+
+                            <i data-lucide="settings"></i>
+
+                            <span>Settings</span>
+
+                        </a>
+
+                    </li>
+
+                    <li class="menu-item logout">
+
+                        <a href="#" id="logoutBtn">
+
+                            <i data-lucide="log-out"></i>
+
+                            <span>Logout</span>
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </aside>
+
+            <!-- Main -->
+
+            <div class="content">
+
+                <!-- Dynamic Content -->
+
+                <main id="pageContent">
+
+                    <section class="hero-section" id="heroSection">
+
+                        <div class="hero-content">
+
+                            <span class="hero-badge">
+
+                                👋 Welcome Back
+
+                            </span>
+
+                            <h1>
+
+                                Hello,
+
+                                <span id="heroUserName">
+
+                                    Teacher
+
+                                </span>
+
+                            </h1>
+
+                            <p>
+
+                                Manage students, calculate results and generate
+                                reports from one dashboard.
+
+                            </p>
+
+                            <div class="hero-buttons">
+
+                                <button class="primary-btn">
+
+                                    Add Student
+
+                                </button>
+
+                                <button class="secondary-btn">
+
+                                    Create Result
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <div class="hero-date">
+
+                            <h3>
+
+                                Today
+
+                            </h3>
+
+                            <p id="currentDate">
+
+                                Loading...
+
+                            </p>
+
+                        </div>
+
+                    </section>
+                    <section id="statsSection" class="stats-grid">
+
+                        <div class="stat-card">
+
+                            <div class="stat-icon">
+
+                                <i data-lucide="users"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h2 id="totalStudents">0</h2>
+
+                                <p>Total Students</p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="stat-card">
+
+                            <div class="stat-icon">
+
+                                <i data-lucide="book-open"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h2 id="totalSubjects">0</h2>
+
+                                <p>Total Subjects</p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="stat-card">
+
+                            <div class="stat-icon">
+
+                                <i data-lucide="clipboard-check"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h2 id="totalResults">0</h2>
+
+                                <p>Results Generated</p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="stat-card">
+
+                            <div class="stat-icon">
+
+                                <i data-lucide="school"></i>
+
+                            </div>
+
+                            <div>
+
+                                <h2 id="totalClasses">0</h2>
+
+                                <p>Classes</p>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+                    <section id="quickActionsSection" class="quick-actions">
+
+                        <div class="section-header">
+
+                            <h2>Quick Actions</h2>
+
+                            <p>Frequently used features</p>
+
+                        </div>
+
+                        <div class="action-grid">
+
+                            <button class="action-card" id="addStudentBtn">
+
+                                <i data-lucide="user-plus"></i>
+
+                                <span>Add Student</span>
+
+                            </button>
+
+                            <button class="action-card" id="addSubjectBtn">
+
+                                <i data-lucide="book-plus"></i>
+
+                                <span>Add Subject</span>
+
+                            </button>
+
+                            <button class="action-card" id="generateResultBtn">
+
+                                <i data-lucide="clipboard-check"></i>
+
+                                <span>Generate Result</span>
+
+                            </button>
+
+                            <button class="action-card" id="viewReportsBtn">
+
+                                <i data-lucide="file-bar-chart"></i>
+
+                                <span>Reports</span>
+
+                            </button>
+
+                        </div>
+
+                    </section>
+                    <section id="activitySection" class="activity-section">
+                        <div class="section-header">
+
+                            <h2>Recent Activity</h2>
+
+                            <p>Latest actions performed in your account</p>
+
+                        </div>
+
+                        <div class="activity-card">
+
+                            <div class="activity-item">
+
+                                <div class="activity-icon">
+
+                                    <i data-lucide="clock-3"></i>
+
+                                </div>
+
+                                <div class="activity-info">
+
+                                    <h4>No recent activity</h4>
+
+                                    <p>Your latest actions will appear here.</p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+                    <section id="recentStudentsSection" class="recent-students">
+
+                        <div class="section-header">
+
+                            <div>
+
+                                <h2>Recent Students</h2>
+
+                                <p>Recently added students</p>
+
+                            </div>
+
+                            <button
+                                id="seeAllStudents"
+                                class="text-btn">
+
+                                See All →
+
+                            </button>
+
+                        </div>
+
+                        <div id="recentStudentsList">
+
+                            <div class="empty-state">
+
+                                No students added yet.
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                    <section id="studentsSection"
+                        class="students-section hidden">
+
+                        <div class="section-header">
+
+                            <div>
+
+                                <h2>Students</h2>
+
+                                <p>Manage all your students from one place.</p>
+
+                            </div>
+
+                            <button id="openStudentModal" class="primary-btn">
+
+                                <i data-lucide="user-plus"></i>
+
+                                <span>Add Student</span>
+
+                            </button>
+
+                        </div>
+
+                        <div class="student-toolbar">
+
+                            <input
+                                type="text"
+                                id="studentSearch"
+                                placeholder="Search by name or roll number...">
+
+                        </div>
+
+                        <div class="student-table-card">
+
+                            <table class="student-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>Roll No</th>
+                                        <th>Name</th>
+                                        <th>Class</th>
+                                        <th>Section</th>
+                                        <th>Gender</th>
+                                        <th>Actions</th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody id="studentsTableBody">
+
+                                    <tr>
+
+                                        <td colspan="6" class="empty-row">
+
+                                            No students added yet.
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </section>
+
+                    <section id="resultsSection" class="results-section hidden">
+
+                        <div class="section-header">
+
+                            <div>
+
+                                <h2>Result Generator</h2>
+
+                                <p>Create a result using the teacher's own
+                                    configured rules.</p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="results-grid">
+
+                            <div class="panel-card">
+
+                                <form id="resultForm">
+
+                                    <div class="input-group">
+
+                                        <label for="resultExam">Select
+                                            Exam</label>
+
+                                        <select id="resultExam"
+                                            required></select>
+
+                                    </div>
+
+                                    <div class="input-group">
+
+                                        <label for="resultClass">Select
+                                            Class</label>
+
+                                        <select id="resultClass">
+                                            <option value>All Classes</option>
+                                        </select>
+
+                                    </div>
+
+                                    <div class="input-group">
+
+                                        <label for="resultStudent">Select
+                                            Student</label>
+
+                                        <select id="resultStudent"
+                                            required></select>
+
+                                    </div>
+
+                                    <div id="marksInputs"
+                                        class="marks-inputs"></div>
+
+                                    <button type="submit"
+                                        class="primary-btn">Generate
+                                        Result</button>
+
+                                </form>
+
+                            </div>
+
+                            <div class="panel-card">
+
+                                <h3>Result Preview</h3>
+
+                                <div id="resultPreview" class="result-preview">
+
+                                    <p>Select an exam, a student, and enter
+                                        marks to generate a result.</p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="section-header">
+
+                            <div>
+
+                                <h2>Latest Results</h2>
+
+                                <p>Recent academic performance snapshots</p>
+
+                            </div>
+
+                            <button id="rankStudentsBtn" class="secondary-btn">
+
+                                Show Position Wise Ranking
+
+                            </button>
+
+                        </div>
+
+                        <div id="rankingSummary" class="result-preview"></div>
+
+                        <div id="rankList" class="results-list"></div>
+
+                        <div id="resultsList" class="results-list"></div>
+
+                    </section>
+
+                    <section id="reportsSection" class="reports-section hidden">
+
+                        <div class="section-header">
+
+                            <div>
+
+                                <h2>Reports</h2>
+
+                                <p>Print-ready summaries and export tools will
+                                    arrive here soon.</p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="panel-card empty-panel">
+
+                            <h3>Report centre is coming next</h3>
+
+                            <p>PDF and Excel exports are being wired into the
+                                same single-page experience.</p>
+
+                        </div>
+
+                    </section>
+
+                    <section id="settingsSection"
+                        class="settings-section hidden">
+
+                        <div class="section-header">
+
+                            <div>
+
+                                <h2>School Configuration</h2>
+
+                                <p>Configure classes, subjects, exams, grading,
+                                    and passing rules.</p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="config-grid">
+
+                            <div class="panel-card config-card">
+                                <h3>Classes</h3>
+                                <form id="classConfigForm" class="config-form">
+                                    <div class="input-group">
+                                        <label for="classNameInput">Class
+                                            Name</label>
+                                        <input id="classNameInput"
+                                            placeholder="Example: Class 10-A"
+                                            required>
+                                    </div>
+                                    <button type="submit"
+                                        class="primary-btn">Add Class</button>
+                                </form>
+                                <div id="classesList" class="config-list"></div>
+                            </div>
+
+                            <div class="panel-card config-card">
+                                <h3>Subjects</h3>
+                                <form id="subjectConfigForm"
+                                    class="config-form">
+                                    <div class="input-group">
+                                        <label for="subjectNameInput">Subject
+                                            Name</label>
+                                        <input id="subjectNameInput"
+                                            placeholder="Example: English"
+                                            required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label
+                                            for="subjectTotalMarksInput">Total
+                                            Marks</label>
+                                        <input id="subjectTotalMarksInput"
+                                            type="number" min="1" step="1"
+                                            placeholder="100" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label
+                                            for="subjectPassMarksInput">Passing
+                                            Marks</label>
+                                        <input id="subjectPassMarksInput"
+                                            type="number" min="0" step="1"
+                                            placeholder="40" required>
+                                    </div>
+                                    <button type="submit"
+                                        class="primary-btn">Add Subject</button>
+                                </form>
+                                <div id="subjectsList"
+                                    class="config-list"></div>
+                            </div>
+
+                            <div class="panel-card config-card">
+                                <h3>Exams</h3>
+                                <form id="examConfigForm" class="config-form">
+                                    <div class="input-group">
+                                        <label for="examNameInput">Exam
+                                            Name</label>
+                                        <input id="examNameInput"
+                                            placeholder="Example: Final Term"
+                                            required>
+                                    </div>
+                                    <button type="submit"
+                                        class="primary-btn">Add Exam</button>
+                                </form>
+                                <div id="examsList" class="config-list"></div>
+                            </div>
+
+                            <div class="panel-card config-card">
+                                <h3>Grade Rules</h3>
+                                <form id="gradeConfigForm" class="config-form">
+                                    <div class="input-group">
+                                        <label for="gradeNameInput">Grade
+                                            Name</label>
+                                        <input id="gradeNameInput"
+                                            placeholder="Example: A+" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="gradeMinInput">Minimum
+                                            Percentage</label>
+                                        <input id="gradeMinInput" type="number"
+                                            min="0" max="100" step="0.1"
+                                            placeholder="90" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="gradeMaxInput">Maximum
+                                            Percentage</label>
+                                        <input id="gradeMaxInput" type="number"
+                                            min="0" max="100" step="0.1"
+                                            placeholder="100" required>
+                                    </div>
+                                    <button type="submit"
+                                        class="primary-btn">Add Grade</button>
+                                </form>
+                                <div id="gradesList" class="config-list"></div>
+                            </div>
+
+                            <div class="panel-card config-card full-width">
+                                <h3>Result Rules</h3>
+                                <form id="resultRulesForm"
+                                    class="config-form grid-form">
+                                    <div class="input-group">
+                                        <label
+                                            for="overallPassPercentageInput">Overall
+                                            Passing Percentage</label>
+                                        <input id="overallPassPercentageInput"
+                                            type="number" min="0" max="100"
+                                            step="0.1" placeholder="40"
+                                            required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="positionRuleSelect">Position
+                                            Rule</label>
+                                        <select id="positionRuleSelect">
+                                            <option
+                                                value="highest_percentage">Highest
+                                                Percentage</option>
+                                            <option value="total_marks">Total
+                                                Obtained Marks</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit"
+                                        class="primary-btn">Save Rules</button>
+                                </form>
+                            </div>
+
+                        </div>
+
+                    </section>
+                    <!-- ==========================
+     ADD STUDENT MODAL
+=========================== -->
+
+                    <div class="modal-overlay hidden" id="studentModal">
+
+                        <div class="modal">
+
+                            <div class="modal-header">
+
+                                <h2>Add Student</h2>
+
+                                <button id="closeStudentModal">
+
+                                    <i data-lucide="x"></i>
+
+                                </button>
+
+                            </div>
+
+                            <form id="studentForm">
+
+                                <div class="form-grid">
+
+                                    <div class="input-group">
+
+                                        <label>Student Name</label>
+
+                                        <input
+                                            type="text"
+                                            id="studentName"
+                                            required>
+
+                                    </div>
+
+                                    <div class="input-group">
+
+                                        <label>Roll Number</label>
+
+                                        <input
+                                            type="text"
+                                            id="studentRoll"
+                                            required>
+
+                                    </div>
+                                    <div class="input-group">
+
+                                        <label>Class</label>
+
+                                        <select id="studentClassType">
+
+                                            <option value="none">
+
+                                                No Class
+
+                                            </option>
+
+                                            <option value="existing">
+
+                                                Select Existing Class
+
+                                            </option>
+
+                                            <option value="new">
+
+                                                Create New Class
+
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+                                    <div
+                                        class="input-group hidden"
+                                        id="existingClassGroup">
+
+                                        <label>Select Class</label>
+
+                                        <select id="existingClass">
+
+                                        </select>
+
+                                    </div>
+
+                                    <div
+                                        class="input-group hidden"
+                                        id="newClassGroup">
+
+                                        <label>New Class Name</label>
+
+                                        <input
+                                            type="text"
+                                            id="newClassName"
+                                            placeholder="Example: Class 10-A">
+
+                                    </div>
+
+                                    <div class="input-group">
+
+                                        <label>Class</label>
+
+                                        <input
+                                            type="text"
+                                            id="studentClass"
+                                            required>
+
+                                    </div>
+
+                                    <div class="input-group">
+
+                                        <label>Section</label>
+
+                                        <input
+                                            type="text"
+                                            id="studentSection"
+                                            required>
+
+                                    </div>
+
+                                    <div class="input-group">
+
+                                        <label>Gender</label>
+
+                                        <select id="studentGender">
+
+                                            <option>Male</option>
+
+                                            <option>Female</option>
+
+                                        </select>
+
+                                    </div>
+
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    class="primary-btn">
+
+                                    Save Student
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </main>
+
+            </div>
+            <div
+                class="sidebar-overlay"
+                id="sidebarOverlay">
+
+            </div>
+
+        </div>
+
+        <script src="../assets/js/icons.js"></script>
+
+        <script src="../assets/js/dashboard.js?v=202608041200"></script>
+
+    </body>
+
+</html>

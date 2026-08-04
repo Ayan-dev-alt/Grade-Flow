@@ -1,0 +1,510 @@
+/*=====================================
+        GOOGLE FONT & ROOT
+======================================*/
+
+:root {
+  --primary: #4f46e5;
+
+  --primary-dark: #3730a3;
+
+  --secondary: #7c3aed;
+
+  --dark: #0f172a;
+
+  --text: #475569;
+
+  --light: #f8fafc;
+
+  --white: #ffffff;
+
+  --border: rgba(148, 163, 184, 0.2);
+
+  --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+
+  --radius: 18px;
+
+  --transition: all 0.35s ease;
+}
+
+* {
+  margin: 0;
+
+  padding: 0;
+
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+
+  background: #ffffff;
+
+  color: var(--dark);
+
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+
+  display: block;
+}
+
+a {
+  text-decoration: none;
+
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+/*=====================================
+            CONTAINER
+======================================*/
+
+.container {
+  width: 100%;
+
+  max-width: 1200px;
+
+  margin: auto;
+
+  padding-left: 20px;
+
+  padding-right: 20px;
+}
+
+/*=====================================
+        SECTION COMMON STYLE
+======================================*/
+
+section {
+  position: relative;
+
+  overflow: hidden;
+}
+
+.section-heading {
+  max-width: 700px;
+
+  margin: 0 auto 60px;
+
+  text-align: center;
+}
+
+.section-badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 8px 18px;
+
+  border-radius: 50px;
+
+  background: rgba(79, 70, 229, 0.1);
+
+  color: var(--primary);
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  margin-bottom: 20px;
+}
+
+.section-heading h2 {
+  font-size: clamp(32px, 4vw, 48px);
+
+  line-height: 1.2;
+
+  font-weight: 700;
+
+  color: var(--dark);
+
+  margin-bottom: 18px;
+}
+
+.section-heading p {
+  color: var(--text);
+
+  font-size: 16px;
+
+  line-height: 1.8;
+}
+
+/*=====================================
+        GLOBAL BUTTON STYLE
+======================================*/
+
+.primary-btn {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  padding: 14px 30px;
+
+  border-radius: 50px;
+
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+
+  color: white;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  transition: var(--transition);
+}
+
+.primary-btn:hover {
+  transform: translateY(-4px);
+
+  box-shadow: 0 15px 35px rgba(79, 70, 229, 0.35);
+}
+
+/*=====================================
+        SCROLLBAR
+======================================*/
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--primary), var(--secondary));
+
+  border-radius: 20px;
+}
+/*=====================================
+        GLASS EFFECT
+======================================*/
+
+.glass {
+  background: rgba(255, 255, 255, 0.65);
+
+  backdrop-filter: blur(20px);
+
+  -webkit-backdrop-filter: blur(20px);
+
+  border: 1px solid rgba(255, 255, 255, 0.4);
+
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+}
+
+/*=====================================
+        CARD BASE STYLE
+======================================*/
+
+.card {
+  background: var(--white);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  padding: 30px;
+
+  transition: var(--transition);
+}
+
+.card:hover {
+  transform: translateY(-8px);
+
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.12);
+}
+
+/*=====================================
+        GRADIENT TEXT
+======================================*/
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+
+  -webkit-background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+}
+
+/*=====================================
+        GLOW EFFECT
+======================================*/
+
+.glow {
+  position: relative;
+}
+
+.glow::before {
+  content: "";
+
+  position: absolute;
+
+  width: 250px;
+
+  height: 250px;
+
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+
+  filter: blur(100px);
+
+  opacity: 0.25;
+
+  z-index: -1;
+}
+
+/*=====================================
+        FLOAT ANIMATION
+======================================*/
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.float-animation {
+  animation: float 5s ease-in-out infinite;
+}
+
+/*=====================================
+        FADE UP ANIMATION
+======================================*/
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: fadeUp 0.8s ease forwards;
+}
+
+/*=====================================
+        SCALE HOVER
+======================================*/
+
+.scale-hover {
+  transition: transform 0.35s ease;
+}
+
+.scale-hover:hover {
+  transform: scale(1.05);
+}
+
+/*=====================================
+        CUSTOM SELECTION
+======================================*/
+
+::selection {
+  background: var(--primary);
+
+  color: white;
+}
+
+/*=====================================
+        HIDDEN ELEMENT
+======================================*/
+
+.hidden {
+  display: none;
+}
+
+/*=====================================
+        FLEX UTILITIES
+======================================*/
+
+.flex-center {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+}
+/*=====================================
+        BACKGROUND BLOBS
+======================================*/
+
+.bg-blob {
+  position: absolute;
+
+  border-radius: 50%;
+
+  filter: blur(90px);
+
+  opacity: 0.25;
+
+  pointer-events: none;
+}
+
+.bg-blob.primary {
+  width: 400px;
+
+  height: 400px;
+
+  background: #4f46e5;
+}
+
+.bg-blob.secondary {
+  width: 350px;
+
+  height: 350px;
+
+  background: #7c3aed;
+}
+
+/*=====================================
+        BACKGROUND GRID
+======================================*/
+
+.grid-background {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+
+  background-size: 40px 40px;
+}
+
+/*=====================================
+        PAGE LOADER
+======================================*/
+
+.page-loader {
+  position: fixed;
+
+  inset: 0;
+
+  background: white;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  z-index: 9999;
+
+  transition: 0.5s ease;
+}
+
+.loader-circle {
+  width: 55px;
+
+  height: 55px;
+
+  border-radius: 50%;
+
+  border: 5px solid #e2e8f0;
+
+  border-top-color: var(--primary);
+
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*=====================================
+        SCROLL TOP BUTTON
+======================================*/
+
+.scroll-top {
+  position: fixed;
+
+  right: 30px;
+
+  bottom: 30px;
+
+  width: 48px;
+
+  height: 48px;
+
+  border-radius: 50%;
+
+  border: none;
+
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+
+  color: white;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  cursor: pointer;
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  transform: translateY(20px);
+
+  transition: 0.35s ease;
+
+  z-index: 1000;
+}
+
+.scroll-top.show {
+  opacity: 1;
+
+  visibility: visible;
+
+  transform: translateY(0);
+}
+
+.scroll-top:hover {
+  transform: translateY(-5px);
+}
