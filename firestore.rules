@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'm.ayanali051@gmail.com';
+    }
+
+    function teacherIsActive(uid) {
+      let profile = get(/databases/$(database)/documents/users/$(uid)).data;
+      return profile.role == 'teacher'
+        && profile.status == 'approved'
+        && (!('approvalStatus' in profile) || profile.approvalStatus == 'approved')
+        && (!('isActive' in profile) || profile.isActive == true)
+        && (!('active' in profile) || profile.active == true);
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAdmin() || (
+        signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == 'teacher'
+        && request.resource.data.status == 'approved'
+        && request.resource.data.approvalStatus == 'approved'
+        && request.resource.data.isActive == true
+        && request.resource.data.active == true
+      );
+      allow update: if isAdmin() || (
+        signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && (request.resource.data.status == resource.data.status
+          || (resource.data.status == 'pending'
+            && request.resource.data.status == 'approved'
+            && request.resource.data.isActive == true
+            && request.resource.data.active == true))
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /teacherData/{teacherId} {
+      allow read, write: if signedIn() && request.auth.uid == teacherId
+        && teacherIsActive(teacherId);
+    }
+
+    match /complaints/{complaintId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.teacherId == request.auth.uid
+        && teacherIsActive(request.auth.uid));
+      allow create: if signedIn() && request.resource.data.teacherId == request.auth.uid
+        && teacherIsActive(request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read, delete: if isAdmin();
+      allow create: if (signedIn()
+        && request.resource.data.keys().hasOnly([
+          'id', 'recipient', 'targetType', 'message', 'createdAt',
+          'readAt', 'uid', 'email', 'event'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.message is string
+        && request.resource.data.targetType == 'admin'
+        && request.resource.data.event == 'teacher_signup'
+        && request.resource.data.recipient == 'Admin'
+        && request.resource.data.readAt == null
+        && request.resource.data.createdAt == request.time)
+        || (isAdmin()
+          && request.resource.data.targetType in ['admin', 'all', 'specific']
+          && request.resource.data.message is string
+          && request.resource.data.createdAt == request.time);
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt']);
+    }
+
+    match /teacherInbox/{teacherId}/notifications/{notificationId} {
+      allow read, delete: if isAdmin() || (signedIn() && request.auth.uid == teacherId
+        && teacherIsActive(teacherId));
+      allow create: if isAdmin();
+      allow update: if signedIn() && request.auth.uid == teacherId
+        && teacherIsActive(teacherId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt']);
+    }
+
+    match /supportThreads/{teacherId} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == teacherId
+        && get(/databases/$(database)/documents/users/$(teacherId)).data.status == 'suspended');
+      allow create, update: if isAdmin() || (signedIn() && request.auth.uid == teacherId
+        && get(/databases/$(database)/documents/users/$(teacherId)).data.status == 'suspended'
+        && request.resource.data.teacherId == teacherId
+        && request.resource.data.lastSender == 'teacher');
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isAdmin() || (signedIn() && request.auth.uid == teacherId
+          && get(/databases/$(database)/documents/users/$(teacherId)).data.status == 'suspended');
+        allow create: if (isAdmin()
+          && request.resource.data.sender == 'admin'
+          && request.resource.data.message is string)
+          || (signedIn() && request.auth.uid == teacherId
+            && get(/databases/$(database)/documents/users/$(teacherId)).data.status == 'suspended'
+            && request.resource.data.sender == 'teacher'
+            && request.resource.data.message is string);
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    match /plans/{planId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
