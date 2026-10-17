@@ -16,7 +16,7 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import Logo from "./Logo";
-import { logout } from "../firebase/firebase";
+import { getFriendlyErrorMessage, logout } from "../firebase/firebase";
 
 const teacherItems = [
   ["Dashboard", "/teacher", LayoutDashboard],
@@ -30,6 +30,7 @@ const teacherItems = [
 
 export default function Sidebar({ admin = false }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
   const navigate = useNavigate();
   const items = admin
     ? [
@@ -38,18 +39,18 @@ export default function Sidebar({ admin = false }) {
         ["Teacher Support", "/admin/support", LifeBuoy],
         ["Complaints", "/admin/complaints", AlertCircle],
         ["Notifications", "/admin/notifications", Bell],
-        ["Plans & Payments", "/admin/payments", ClipboardList],
+        ["Teacher Plans", "/admin/payments", ClipboardList],
         ["Settings", "/admin/settings", Settings],
       ]
     : teacherItems;
 
   const handleLogout = async () => {
+    setLogoutError("");
     try {
       await logout();
       navigate("/auth", { replace: true });
     } catch (error) {
-      console.error("Logout failed:", error);
-      navigate("/auth", { replace: true });
+      setLogoutError(getFriendlyErrorMessage(error, "We couldn't sign you out. Check your connection and try again."));
     }
   };
 
@@ -109,7 +110,7 @@ export default function Sidebar({ admin = false }) {
               <span className="text-xs font-bold">Secure Workspace</span>
             </div>
             <p className="text-xs leading-5 text-slate-400">
-              Your dashboard structure is ready for Firebase integration.
+              Your account and workspace records are protected by Firebase.
             </p>
           </div>
           <button
@@ -119,6 +120,7 @@ export default function Sidebar({ admin = false }) {
           >
             <LogOut size={18} /> Logout
           </button>
+          {logoutError && <p role="alert" className="mt-2 px-3 text-xs leading-5 text-rose-300">{logoutError}</p>}
         </div>
       </aside>
     </>

@@ -17,12 +17,12 @@ import {
   signInWithGoogle,
   getAccountSession,
   resetPassword,
+  getFriendlyErrorMessage,
 } from "../firebase/firebase";
 
 export default function Auth() {
   const [mode, setMode] = useState("login");
   const [show, setShow] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [resetMessage, setResetMessage] = useState("");
@@ -87,9 +87,9 @@ export default function Auth() {
 
       navigate("/auth?status=pending", { replace: true });
     } catch (submitError) {
-      setError(
-        submitError.message || "Authentication failed. Please try again.",
-      );
+      setError(submitError?.code === "gradeflow/new-google-account"
+        ? "This Google account is new to GradeFlow. Choose Create Account, enter your phone number, then select Continue with Google."
+        : getFriendlyErrorMessage(submitError, "We couldn't sign you in. Check your details and try again."));
     } finally {
       setLoading(false);
     }
@@ -112,9 +112,7 @@ export default function Auth() {
         "GradeFlow reset link has been sent to your email. Open the email and tap the link to set a new password.",
       );
     } catch (submitError) {
-      setError(
-        submitError?.message || "Unable to send reset email. Please try again.",
-      );
+      setError(getFriendlyErrorMessage(submitError, "We couldn't send the password reset email. Check the email address and try again."));
     } finally {
       setLoading(false);
     }
@@ -148,15 +146,9 @@ export default function Auth() {
 
       navigate("/auth?status=pending", { replace: true });
     } catch (submitError) {
-      const message =
-        submitError?.code === "auth/popup-blocked"
-          ? "Google popup was blocked. Please allow popups and try again."
-          : submitError?.code === "auth/popup-closed-by-user"
-            ? "Google sign-in was cancelled."
-            : submitError?.message ||
-              "Google sign-in failed. Please try again.";
-
-      setError(message);
+      setError(submitError?.code === "gradeflow/new-google-account"
+        ? "This Google account is new to GradeFlow. Choose Create Account, enter your phone number, then select Continue with Google."
+        : getFriendlyErrorMessage(submitError, "We couldn't sign in with Google. Choose Continue with Google to try again, or use email and password."));
     } finally {
       setLoading(false);
     }
@@ -209,7 +201,7 @@ export default function Auth() {
               <p className="mt-2 text-sm text-slate-500">
                 {mode === "login"
                   ? "Sign in to your teacher workspace."
-                  : "Your new account will remain pending until admin approval."}
+                  : "Create a teacher account with your name, phone number and email, or continue with Google."}
               </p>
             </div>
 
@@ -320,16 +312,6 @@ export default function Auth() {
                 </div>
               )}
 
-              <label className="flex items-center gap-2 text-sm text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(event) => setRememberMe(event.target.checked)}
-                  className="h-4 w-4 rounded border-white/10 bg-slate-900 text-indigo-500 focus:ring-indigo-500"
-                />
-                Remember me
-              </label>
-
               <button
                 type="submit"
                 disabled={loading}
@@ -345,8 +327,7 @@ export default function Auth() {
 
             {isPendingApproval && (
               <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-                Your account is waiting for admin review. You will be able to
-                access the teacher dashboard after approval.
+                This account is awaiting administrator activation. If you think this is a mistake, contact the administrator.
               </div>
             )}
 

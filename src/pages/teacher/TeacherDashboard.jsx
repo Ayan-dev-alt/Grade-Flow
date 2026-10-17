@@ -6,10 +6,7 @@ import {
   ClipboardList,
   GraduationCap,
   Plus,
-  Search,
   Bell,
-  Menu,
-  X,
   TrendingUp,
   CalendarDays,
   CheckCircle2,
@@ -20,7 +17,7 @@ import {
 import Sidebar from "../../components/Sidebar";
 import StatCard from "../../components/StatCard";
 import ConfirmDialog from "../../components/ConfirmDialog";
-import { useAuthSession, subscribeTeacherData, saveTeacherData, subscribeComplaints, submitComplaint, subscribeTeacherNotifications, deleteTeacherNotification, markTeacherNotificationRead, startTeacherPresence } from "../../firebase/firebase";
+import { useAuthSession, subscribeTeacherData, saveTeacherData, subscribeComplaints, submitComplaint, subscribeTeacherNotifications, deleteTeacherNotification, markTeacherNotificationRead, startTeacherPresence, getFriendlyErrorMessage } from "../../firebase/firebase";
 
 const defaultData = { className: "", subjects: [], students: [] };
 
@@ -72,6 +69,7 @@ export default function TeacherDashboard() {
   const uid = user?.uid;
   const [teacherData, setTeacherData] = useState(defaultData);
   const [complaints, setComplaints] = useState([]);
+  const [dataError, setDataError] = useState("");
   const ready = useRef(false);
   const lastSaved = useRef("");
 
@@ -83,8 +81,8 @@ export default function TeacherDashboard() {
       lastSaved.current = JSON.stringify(normalized);
       ready.current = true;
       setTeacherData(normalized);
-    }, (error) => console.error("Could not load teacher data", error));
-    const stopComplaints = subscribeComplaints(uid, setComplaints, (error) => console.error("Could not load complaints", error));
+    }, (error) => setDataError(getFriendlyErrorMessage(error, "We couldn't load your class records. Refresh the page and try again.")));
+    const stopComplaints = subscribeComplaints(uid, setComplaints, (error) => setDataError(getFriendlyErrorMessage(error, "We couldn't load your complaints. Refresh the page and try again.")));
     return () => { stopData(); stopComplaints(); stopPresence(); };
   }, [uid]);
 
@@ -94,7 +92,8 @@ export default function TeacherDashboard() {
     if (serialized === lastSaved.current) return;
     const timer = setTimeout(() => {
       saveTeacherData(uid, teacherData).then(() => { lastSaved.current = serialized; })
-        .catch((error) => console.error("Could not save teacher data", error));
+        .then(() => setDataError(""))
+        .catch((error) => setDataError(getFriendlyErrorMessage(error, "Your changes couldn't be saved. Check your connection and try again.")));
     }, 350);
     return () => clearTimeout(timer);
   }, [uid, teacherData]);
@@ -173,8 +172,15 @@ export default function TeacherDashboard() {
     }));
   };
 
-  const addComplaint = (complaint) => {
-    submitComplaint(uid, { ...complaint, reporterName: user?.displayName || "Teacher" }).catch((error) => console.error("Could not submit complaint", error));
+  const addComplaint = async (complaint) => {
+    try {
+      await submitComplaint(uid, { ...complaint, reporterName: user?.displayName || "Teacher" });
+      setDataError("");
+      return true;
+    } catch (error) {
+      setDataError(getFriendlyErrorMessage(error, "Your complaint couldn't be sent. Check your connection and try again."));
+      return false;
+    }
   };
 
   return (
@@ -182,6 +188,7 @@ export default function TeacherDashboard() {
       <Sidebar />
       <div className="lg:pl-64">
         <Header />
+        {dataError && <div role="alert" className="mx-5 mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm leading-6 text-rose-200">{dataError}</div>}
         <Routes>
           <Route index element={<Overview teacherData={teacherData} />} />
           <Route
@@ -250,9 +257,9 @@ export default function TeacherDashboard() {
 }
 
 function Header() {
-  const [open, setOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [notificationError, setNotificationError] = useState("");
   const { user: currentUser } = useAuthSession();
   const currentName = currentUser?.displayName || "Teacher";
 
@@ -262,7 +269,7 @@ function Header() {
       setAllNotifications([]);
       return undefined;
     }
-    return subscribeTeacherNotifications(currentUser.uid, setAllNotifications, (error) => console.error("Could not load notifications", error));
+    return subscribeTeacherNotifications(currentUser.uid, setAllNotifications, (error) => setNotificationError(getFriendlyErrorMessage(error, "We couldn't load your notifications. Refresh the page and try again.")));
   }, [currentUser?.uid]);
   const notifications = useMemo(() => allNotifications.filter((item) => item.targetType === "all" || item.recipient?.toLowerCase() === currentName.toLowerCase()), [allNotifications, currentName]);
   const unreadNotifications = useMemo(() => notifications.filter((item) => !item.readAt), [notifications]);
@@ -271,7 +278,7 @@ function Header() {
     if (!showNotifications || !currentUser?.uid) return;
     unreadNotifications.forEach((notification) => {
       markTeacherNotificationRead(currentUser.uid, notification.id)
-        .catch((error) => console.error("Could not mark notification as read", error));
+        .catch((error) => setNotificationError(getFriendlyErrorMessage(error, "We couldn't update this notification. Please try again.")));
     });
   }, [showNotifications, currentUser?.uid, unreadNotifications]);
 
@@ -283,13 +290,6 @@ function Header() {
           <h1 className="text-lg font-bold">GradeFlow Dashboard</h1>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            className="hidden rounded-xl border border-white/10 p-2.5 text-slate-400 sm:block"
-            aria-label="Search"
-          >
-            <Search size={18} />
-          </button>
-
           <div className="relative">
             <button
               type="button"
@@ -357,28 +357,16 @@ function Header() {
           <div className="hidden h-9 w-9 place-items-center rounded-full bg-indigo-500/20 text-sm font-bold text-indigo-300 sm:grid">
             {currentName.slice(0, 2).toUpperCase() || "TA"}
           </div>
-          <button
-            className="lg:hidden"
-            onClick={() => setOpen((current) => !current)}
-            aria-label="Toggle menu"
-          >
-            {open ? <X /> : <Menu />}
-          </button>
         </div>
       </div>
-      {open && (
-        <div className="mt-4 rounded-xl border border-white/10 p-4 text-sm text-slate-400">
-          Use the sidebar on desktop. Mobile navigation can be connected to the
-          same routes.
-        </div>
-      )}
+      {notificationError && <p role="alert" className="mx-auto mt-3 max-w-7xl text-sm text-rose-300">{notificationError}</p>}
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         title="Delete this notification?"
         message="This notification will be permanently removed from your inbox. Other teachers will still have their own copy. Are you sure?"
         onCancel={() => setDeleteTarget(null)}
         onConfirm={() => {
-          deleteTeacherNotification(currentUser?.uid, deleteTarget.id).catch((error) => console.error("Could not delete notification", error));
+          deleteTeacherNotification(currentUser?.uid, deleteTarget.id).catch((error) => setNotificationError(getFriendlyErrorMessage(error, "We couldn't delete this notification. Please try again.")));
           setDeleteTarget(null);
         }}
       />
@@ -514,7 +502,7 @@ function Students({ students, className, onAddStudent, onDeleteStudent }) {
     gender: "Male",
   });
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!form.rollNo || !form.name) return;
     onAddStudent(form);
@@ -1105,13 +1093,13 @@ function Complaints({ students, complaints, onAddComplaint }) {
     details: "",
   });
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!form.studentId || !form.title || !form.details) return;
 
     const student = students.find((item) => item.id === form.studentId);
 
-    onAddComplaint({
+    const saved = await onAddComplaint({
       reporterName,
       studentId: form.studentId,
       studentName: student?.name || "Unknown student",
@@ -1119,11 +1107,13 @@ function Complaints({ students, complaints, onAddComplaint }) {
       details: form.details,
     });
 
-    setForm({
-      studentId: students[0]?.id || "",
-      title: "",
-      details: "",
-    });
+    if (saved) {
+      setForm({
+        studentId: students[0]?.id || "",
+        title: "",
+        details: "",
+      });
+    }
   };
 
   const myComplaints = complaints.filter(

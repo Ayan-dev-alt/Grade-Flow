@@ -41,6 +41,30 @@ function resolveTeacherStatus(profile = {}) {
     return "pending";
 }
 
+export function getFriendlyErrorMessage(error, fallback = "Something went wrong. Please try again.") {
+    const code = error?.code || "";
+    const messages = {
+        "auth/invalid-email": "That email address is not valid. Check it and try again.",
+        "auth/user-not-found": "We couldn't find an account with that email. Check the address or choose Sign up to create an account.",
+        "auth/wrong-password": "That password doesn't match this account. Try again or use Forgot password.",
+        "auth/invalid-credential": "The email or password is incorrect. Check your details, or choose Continue with Google if you created your account with Google.",
+        "auth/email-already-in-use": "An account already uses this email. Sign in instead, or choose Continue with Google if you registered with Google.",
+        "auth/weak-password": "Choose a stronger password with at least 6 characters.",
+        "auth/too-many-requests": "Too many attempts were made. Wait a few minutes, then try again.",
+        "auth/network-request-failed": "We couldn't connect to the sign-in service. Check your internet connection and try again.",
+        "auth/operation-not-allowed": "This sign-in method is disabled. Ask the administrator to enable it in Firebase Authentication.",
+        "auth/unauthorized-domain": "This website isn't authorized for Firebase sign-in. Ask the administrator to add this domain in Firebase Authentication.",
+        "auth/popup-blocked": "Your browser blocked the Google sign-in window. Allow pop-ups for this site, then try again.",
+        "auth/popup-closed-by-user": "Google sign-in was closed before it finished. Choose Continue with Google to try again.",
+        "auth/cancelled-popup-request": "Another sign-in window is already open. Finish it or close it, then try again.",
+        "permission-denied": "You don't have permission to do that. Check that you are signed in with the right account, then try again. Contact the administrator if this continues.",
+        "unavailable": "The database is temporarily unavailable. Check your connection and try again in a moment.",
+        "deadline-exceeded": "The request took too long. Check your connection and try again.",
+        "not-found": "This item may have already been deleted. Refresh the page and try again.",
+    };
+    return messages[code] || fallback;
+}
+
 export function useAuthSession() {
     const [session, setSession] = useState({ loading: true, user: null, profile: null, role: null, status: null });
     useEffect(() => {
@@ -175,6 +199,17 @@ export function subscribeTeacherNotifications(uid, callback, onError) {
 export function subscribeNotifications(callback, onError) {
     return onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc")), (snapshot) => callback(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))), onError);
 }
+export function subscribePlans(callback, onError) {
+    return onSnapshot(query(collection(db, "plans"), orderBy("name")), (snapshot) => callback(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))), onError);
+}
+export function savePlan(plan) {
+    const planRef = plan.id ? doc(db, "plans", plan.id) : doc(collection(db, "plans"));
+    const { id, ...data } = plan;
+    return setDoc(planRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+}
+export function deletePlan(planId) {
+    return deleteDoc(doc(db, "plans", planId));
+}
 export async function createNotification(notification) {
     const createdAt = serverTimestamp();
     const result = await addDoc(collection(db, "notifications"), { ...notification, createdAt });
@@ -243,7 +278,9 @@ export async function signInWithGoogle(phone = "") {
     if (user.email?.toLowerCase() !== "m.ayanali051@gmail.com") {
         const profile = await getDoc(doc(db, "users", user.uid));
         if (!profile.exists() && !phone.trim()) {
-            throw new Error("This is a new teacher account. Please choose Sign up and enter your phone number.");
+            const error = new Error("New teacher account");
+            error.code = "gradeflow/new-google-account";
+            throw error;
         }
         await createUserProfile(user, phone.trim() ? { phone: phone.trim() } : {});
     }

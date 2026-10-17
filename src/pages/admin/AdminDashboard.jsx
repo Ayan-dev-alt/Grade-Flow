@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import {
   Users,
@@ -7,7 +7,6 @@ import {
   CreditCard,
   ShieldCheck,
   Search,
-  Plus,
   Phone,
   Bell,
   Trash2,
@@ -19,7 +18,7 @@ import Sidebar from "../../components/Sidebar";
 import StatCard from "../../components/StatCard";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import {
-  subscribeTeachers, subscribeNotifications, subscribeComplaints, createNotification, setTeacherStatus, removeTeacher, deleteNotificationEverywhere, deleteComplaint, subscribeSupportThreads, subscribeSupportMessages, sendAdminSupportMessage,
+  subscribeTeachers, subscribeNotifications, subscribeComplaints, createNotification, setTeacherStatus, removeTeacher, deleteNotificationEverywhere, deleteComplaint, subscribeSupportThreads, subscribeSupportMessages, sendAdminSupportMessage, subscribePlans, savePlan, deletePlan, getFriendlyErrorMessage,
 } from "../../firebase/firebase";
 
 function sortTeachers(list) {
@@ -47,7 +46,7 @@ export default function AdminDashboard() {
           <Route path="complaints" element={<Complaints />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="payments" element={<Payments />} />
-          <Route path="settings" element={<Payments />} />
+          <Route path="settings" element={<AdminSettings />} />
         </Routes>
       </div>
     </div>
@@ -56,7 +55,10 @@ export default function AdminDashboard() {
 
 function Overview() {
   const [rows, setRows] = useState([]);
-  useEffect(() => subscribeTeachers(setRows, (error) => console.error("Could not load teachers", error)), []);
+  const [plans, setPlans] = useState([]);
+  const [error, setError] = useState("");
+  useEffect(() => subscribeTeachers(setRows, (error) => setError(getFriendlyErrorMessage(error, "We couldn't load teacher accounts. Refresh the page and try again."))), []);
+  useEffect(() => subscribePlans(setPlans, (error) => setError(getFriendlyErrorMessage(error, "We couldn't load plans. Refresh the page and try again."))), []);
   const totalTeachers = rows.length;
   const inactive = rows.filter((teacher) => teacher.status === "suspended").length;
   const active = rows.filter(
@@ -95,17 +97,19 @@ function Overview() {
         <StatCard
           icon={CreditCard}
           label="Paid Plans"
-          value="68"
-          note="Current"
+          value={String(plans.length)}
+          note="Configured"
         />
       </div>
+
+      {error && <p role="alert" className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
 
       <div className="glass rounded-2xl p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h3 className="font-bold">Admin workflow</h3>
             <p className="mt-1 text-xs text-slate-500">
-              Teacher approval → plan → usage limit → expiry.
+              Manage teacher access and configured plans.
             </p>
           </div>
           <Link
@@ -124,7 +128,8 @@ function Teachers() {
   const [rows, setRows] = useState([]);
   const [query, setQuery] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
-  useEffect(() => subscribeTeachers((items) => setRows(sortTeachers(items)), (error) => console.error("Could not load teachers", error)), []);
+  const [error, setError] = useState("");
+  useEffect(() => subscribeTeachers((items) => setRows(sortTeachers(items)), (error) => setError(getFriendlyErrorMessage(error, "We couldn't load teacher accounts. Refresh the page and try again."))), []);
 
   const filteredRows = rows.filter((teacher) => {
     const value = query.toLowerCase();
@@ -137,7 +142,7 @@ function Teachers() {
     );
   });
 
-  const update = (email, status) => {
+  const update = async (email, status) => {
     const nextRows = sortTeachers(
       rows.map((teacher) =>
         (teacher.email || "").toLowerCase() === email.toLowerCase()
@@ -153,13 +158,18 @@ function Teachers() {
       ),
     );
 
-    setRows(nextRows);
-
     const teacher = rows.find((item) => item.email?.toLowerCase() === email.toLowerCase());
-    if (teacher?.uid) setTeacherStatus(teacher.uid, status).catch((error) => console.error("Could not update teacher", error));
+    if (!teacher?.uid) return;
+    try {
+      await setTeacherStatus(teacher.uid, status);
+      setRows(nextRows);
+      setError("");
+    } catch (error) {
+      setError(getFriendlyErrorMessage(error, "We couldn't update this teacher's access. Please try again."));
+    }
   };
 
-  const remove = (email) => {
+  const remove = async (email) => {
     const nextRows = sortTeachers(
       rows.filter(
         (teacher) =>
@@ -167,9 +177,16 @@ function Teachers() {
       ),
     );
 
-    setRows(nextRows);
     const teacher = rows.find((item) => item.email?.toLowerCase() === email.toLowerCase());
-    if (teacher?.uid) removeTeacher(teacher.uid).catch((error) => console.error("Could not delete teacher", error));
+    if (!teacher?.uid) return;
+    try {
+      await removeTeacher(teacher.uid);
+      setRows(nextRows);
+      setDeleteTarget(null);
+      setError("");
+    } catch (error) {
+      setError(getFriendlyErrorMessage(error, "We couldn't delete this teacher. Please try again."));
+    }
   };
 
   return (
@@ -190,6 +207,7 @@ function Teachers() {
           className="flex-1 bg-transparent text-sm outline-none"
         />
       </div>
+      {error && <p role="alert" className="mb-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
 
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/[.03]">
         <table className="w-full min-w-[760px] text-left text-sm">
@@ -297,7 +315,7 @@ function Teachers() {
         title={`Delete ${deleteTarget?.name || "this teacher"}?`}
         message="This teacher profile will be permanently deleted from the database. This action cannot be undone. Are you sure?"
         onCancel={() => setDeleteTarget(null)}
-        onConfirm={() => { remove(deleteTarget.email); setDeleteTarget(null); }}
+        onConfirm={() => remove(deleteTarget.email)}
       />
     </main>
   );
