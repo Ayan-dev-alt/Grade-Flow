@@ -218,7 +218,9 @@ export async function createNotification(notification) {
     const targets = teachers.docs.filter((item) => {
         const teacher = item.data();
         if (teacher.role !== "teacher" || teacher.status !== "approved") return false;
-        return notification.targetType === "all" || teacher.name?.toLowerCase() === recipient || teacher.displayName?.toLowerCase() === recipient;
+        return notification.targetType === "all"
+            || (notification.recipientId && item.id === notification.recipientId)
+            || (!notification.recipientId && (teacher.name?.toLowerCase() === recipient || teacher.displayName?.toLowerCase() === recipient));
     });
     await Promise.all(targets.map((teacher) => setDoc(doc(db, "teacherInbox", teacher.id, "notifications", result.id), {
         ...notification, id: result.id, createdAt,

@@ -22,7 +22,14 @@ import {
 } from "../../firebase/firebase";
 
 function sortTeachers(list) {
-  return [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  return [...list].sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));
+}
+
+function toDate(value) {
+  if (!value) return null;
+  if (typeof value.toDate === "function") return value.toDate();
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function isTeacherOnline(teacher) {
@@ -71,7 +78,7 @@ function Overview() {
         <p className="text-sm text-indigo-300">Control Center</p>
         <h2 className="mt-2 text-3xl font-black">Platform overview</h2>
         <p className="mt-2 text-sm text-slate-400">
-          Monitor active teachers, account access and subscription usage.
+          Monitor teacher accounts, live sign-in status and configured plans.
         </p>
       </div>
 
@@ -96,7 +103,7 @@ function Overview() {
         />
         <StatCard
           icon={CreditCard}
-          label="Paid Plans"
+          label="Configured Plans"
           value={String(plans.length)}
           note="Configured"
         />
@@ -235,7 +242,7 @@ function Teachers() {
                   colSpan={7}
                   className="px-5 py-8 text-center text-slate-500"
                 >
-                  No teacher requests found.
+                  No teacher accounts found.
                 </td>
               </tr>
             )}
@@ -271,18 +278,18 @@ function Teachers() {
                           : "bg-amber-500/10 text-amber-400"
                     }`}
                   >
-                    {teacher.status === "suspended" ? "Deactivated" : "Active"}
+                    {teacher.status === "suspended" ? "Deactivated" : teacher.status === "approved" ? "Active" : "Pending"}
                   </span>
                 </td>
                 <td className="px-5 py-5 text-slate-500">
-                  {new Date(teacher.date || Date.now()).toLocaleDateString(
+                  {toDate(teacher.createdAt || teacher.date)?.toLocaleDateString(
                     "en-GB",
                     {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
                     },
-                  )}
+                  ) || "—"}
                 </td>
                 <td className="px-5 py-5">
                   <div className="flex gap-2">
@@ -332,11 +339,11 @@ function SupportInbox() {
   useEffect(() => subscribeSupportThreads((items) => {
     setThreads(items);
     setSelectedId((current) => current || items[0]?.id || "");
-  }, (loadError) => setError(loadError.message || "Could not load support threads.")), []);
+  }, (loadError) => setError(getFriendlyErrorMessage(loadError, "We couldn't load support requests. Refresh the page and try again."))), []);
 
   useEffect(() => {
     if (!selectedId) { setMessages([]); return undefined; }
-    return subscribeSupportMessages(selectedId, setMessages, (loadError) => setError(loadError.message || "Could not load messages."));
+    return subscribeSupportMessages(selectedId, setMessages, (loadError) => setError(getFriendlyErrorMessage(loadError, "We couldn't load this conversation. Refresh the page and try again.")));
   }, [selectedId]);
 
   const selectedThread = threads.find((thread) => thread.id === selectedId);
@@ -350,7 +357,7 @@ function SupportInbox() {
       await sendAdminSupportMessage(selectedId, draft);
       setDraft("");
     } catch (sendError) {
-      setError(sendError.message || "Could not send reply.");
+      setError(getFriendlyErrorMessage(sendError, "We couldn't send your reply. Please try again."));
     } finally {
       setSending(false);
     }
@@ -410,28 +417,46 @@ function SupportInbox() {
 function Notifications() {
   const [rows, setRows] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  useEffect(() => subscribeNotifications(setRows, (error) => console.error("Could not load notifications", error)), []);
+  const [error, setError] = useState("");
+  useEffect(() => subscribeNotifications(setRows, (error) => setError(getFriendlyErrorMessage(error, "We couldn't load notifications. Refresh the page and try again."))), []);
   const [teachers, setTeachers] = useState([]);
-  useEffect(() => subscribeTeachers(setTeachers, (error) => console.error("Could not load teachers", error)), []);
-  const recipients = ["All Teachers", ...teachers.map((teacher) => teacher.name)];
+  useEffect(() => subscribeTeachers(setTeachers, (error) => setError(getFriendlyErrorMessage(error, "We couldn't load teacher accounts. Refresh the page and try again."))), []);
+  const recipients = [{ value: "All Teachers", label: "All Teachers" }, ...teachers.filter((teacher) => teacher.status === "approved").map((teacher) => ({ value: teacher.uid || teacher.id, label: `${teacher.name || teacher.displayName || "Teacher"} (${teacher.email || "No email"})` }))];
   const [form, setForm] = useState({
     recipient: "All Teachers",
     message: "",
   });
 
-  const sendNotification = (target) => {
-    if (!form.message.trim()) return;
+  const sendNotification = async (target) => {
+    if (!form.message.trim()) {
+      setError("Write a message before sending the notification.");
+      return;
+    }
+    if (target === "specific" && form.recipient === "All Teachers") {
+      setError("Choose a teacher before sending a specific notification.");
+      return;
+    }
+    if (target === "specific" && !teachers.some((teacher) => (teacher.uid || teacher.id) === form.recipient && teacher.status === "approved")) {
+      setError("That teacher account is no longer active. Choose an active teacher and try again.");
+      return;
+    }
 
     const nextEntry = {
       id: `${Date.now()}`,
-      recipient: target === "all" ? "All Teachers" : form.recipient,
+      recipient: target === "all" ? "All Teachers" : teachers.find((teacher) => (teacher.uid || teacher.id) === form.recipient)?.name || "Teacher",
+      ...(target === "specific" ? { recipientId: form.recipient } : {}),
       targetType: target,
       message: form.message.trim(),
       createdAt: new Date().toISOString(),
     };
 
-    createNotification(nextEntry).catch((error) => console.error("Could not send notification", error));
-    setForm({ recipient: "All Teachers", message: "" });
+    try {
+      await createNotification(nextEntry);
+      setForm({ recipient: "All Teachers", message: "" });
+      setError("");
+    } catch (error) {
+      setError(getFriendlyErrorMessage(error, "We couldn't send this notification. Please try again."));
+    }
   };
 
   return (
@@ -442,6 +467,7 @@ function Notifications() {
           Send a message to all teachers or a specific teacher.
         </p>
       </div>
+      {error && <p role="alert" className="mb-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
         <div className="rounded-2xl border border-white/10 bg-white/[.03] p-5">
@@ -454,8 +480,8 @@ function Notifications() {
             className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none focus:border-indigo-500/50"
           >
             {recipients.map((recipient) => (
-              <option key={recipient} value={recipient}>
-                {recipient}
+              <option key={recipient.value} value={recipient.value}>
+                {recipient.label}
               </option>
             ))}
           </select>
@@ -512,12 +538,12 @@ function Notifications() {
                       : notification.recipient}
                   </span>
                   <span className="text-[10px] text-slate-500">
-                    {new Date(notification.createdAt).toLocaleString("en-GB", {
+                    {toDate(notification.createdAt)?.toLocaleString("en-GB", {
                       day: "2-digit",
                       month: "short",
                       hour: "2-digit",
                       minute: "2-digit",
-                    })}
+                    }) || "—"}
                   </span>
                   <button
                     type="button"
@@ -542,9 +568,14 @@ function Notifications() {
         title="Delete this notification?"
         message="This notification will be permanently removed from the admin list and teacher inboxes. This action cannot be undone. Are you sure?"
         onCancel={() => setDeleteTarget(null)}
-        onConfirm={() => {
-          deleteNotificationEverywhere(deleteTarget.id).catch((error) => console.error("Could not delete notification", error));
-          setDeleteTarget(null);
+        onConfirm={async () => {
+          try {
+            await deleteNotificationEverywhere(deleteTarget.id);
+            setDeleteTarget(null);
+            setError("");
+          } catch (error) {
+            setError(getFriendlyErrorMessage(error, "We couldn't delete this notification. Please try again."));
+          }
         }}
       />
     </main>
@@ -554,7 +585,8 @@ function Notifications() {
 function Complaints() {
   const [rows, setRows] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  useEffect(() => subscribeComplaints(null, setRows, (error) => console.error("Could not load complaints", error)), []);
+  const [error, setError] = useState("");
+  useEffect(() => subscribeComplaints(null, setRows, (error) => setError(getFriendlyErrorMessage(error, "We couldn't load complaints. Refresh the page and try again."))), []);
 
   return (
     <main className="mx-auto max-w-7xl p-5 md:p-8">
@@ -564,6 +596,7 @@ function Complaints() {
           Review all student and class complaints reported by teachers.
         </p>
       </div>
+      {error && <p role="alert" className="mb-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[.03]">
         <table className="w-full text-left text-sm">
@@ -611,7 +644,7 @@ function Complaints() {
                   </div>
                 </td>
                 <td className="px-5 py-4 text-slate-500">
-                  {new Date(complaint.createdAt || Date.now()).toLocaleString(
+                  {toDate(complaint.createdAt)?.toLocaleString(
                     "en-GB",
                     {
                       day: "2-digit",
@@ -620,7 +653,7 @@ function Complaints() {
                       hour: "2-digit",
                       minute: "2-digit",
                     },
-                  )}
+                  ) || "—"}
                 </td>
                 <td className="px-5 py-4 text-right">
                   <button
@@ -643,9 +676,14 @@ function Complaints() {
         title="Delete this complaint?"
         message="This complaint will be permanently removed from the database. This action cannot be undone. Are you sure?"
         onCancel={() => setDeleteTarget(null)}
-        onConfirm={() => {
-          deleteComplaint(deleteTarget.id).catch((error) => console.error("Could not delete complaint", error));
-          setDeleteTarget(null);
+        onConfirm={async () => {
+          try {
+            await deleteComplaint(deleteTarget.id);
+            setDeleteTarget(null);
+            setError("");
+          } catch (error) {
+            setError(getFriendlyErrorMessage(error, "We couldn't delete this complaint. Please try again."));
+          }
         }}
       />
     </main>
@@ -653,58 +691,76 @@ function Complaints() {
 }
 
 function Payments() {
-  const [plans] = useState([
-    { name: "Starter", students: 100, days: 30, price: "Free" },
-    { name: "Pro", students: 500, days: 90, price: "Custom" },
-    { name: "Unlimited", students: "∞", days: 365, price: "Custom" },
-  ]);
+  const [plans, setPlans] = useState([]);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [form, setForm] = useState({ name: "", studentLimit: "", durationDays: "", price: "" });
+  useEffect(() => subscribePlans(setPlans, (error) => setError(getFriendlyErrorMessage(error, "We couldn't load plans. Refresh the page and try again."))), []);
 
-  return (
-    <main className="mx-auto max-w-7xl p-5 md:p-8">
-      <div className="mb-7 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Plans & Payments</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Configure usage limits. Connect your own payment/database logic
-            later.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold"
-        >
-          <Plus size={17} /> Add Plan
-        </button>
-      </div>
-      <div className="grid gap-4 md:grid-cols-3">
-        {plans.map((plan) => (
-          <div key={plan.name} className="glass rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold">{plan.name}</h3>
-              <CreditCard className="text-indigo-400" size={20} />
-            </div>
-            <div className="mt-7 space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Student limit</span>
-                <b>{plan.students}</b>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Duration</span>
-                <b>{plan.days} days</b>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Price</span>
-                <b>{plan.price}</b>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-5 rounded-2xl border border-amber-500/10 bg-amber-500/5 p-5 text-sm text-amber-200/70">
-        <ShieldCheck className="mb-2 text-amber-400" size={20} />
-        Database/payment integration intentionally left as structure only, as
-        requested.
-      </div>
-    </main>
-  );
+  const addPlan = async (event) => {
+    event.preventDefault();
+    if (!form.name.trim() || !form.studentLimit || !form.durationDays || !form.price.trim()) {
+      setError("Enter a plan name, student limit, duration and price before saving.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await savePlan({
+        name: form.name.trim(),
+        studentLimit: Number(form.studentLimit),
+        durationDays: Number(form.durationDays),
+        price: form.price.trim(),
+        active: true,
+      });
+      setForm({ name: "", studentLimit: "", durationDays: "", price: "" });
+    } catch (error) {
+      setError(getFriendlyErrorMessage(error, "We couldn't save this plan. Please check your connection and try again."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const togglePlan = async (plan) => {
+    try {
+      await savePlan({ ...plan, active: plan.active === false });
+      setError("");
+    } catch (error) {
+      setError(getFriendlyErrorMessage(error, "We couldn't update this plan. Please try again."));
+    }
+  };
+
+  const removePlan = async (plan) => {
+    try {
+      await deletePlan(plan.id);
+      setDeleteTarget(null);
+      setError("");
+    } catch (error) {
+      setError(getFriendlyErrorMessage(error, "We couldn't delete this plan. Please try again."));
+    }
+  };
+
+  return <main className="mx-auto max-w-7xl p-5 md:p-8">
+    <div className="mb-7"><h2 className="text-2xl font-bold">Teacher Plans</h2><p className="mt-1 text-sm text-slate-500">Plans are saved in Firestore and update here in real time.</p></div>
+    {error && <p role="alert" className="mb-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
+    <form onSubmit={addPlan} className="mb-7 grid gap-3 rounded-2xl border border-white/10 bg-white/[.03] p-5 sm:grid-cols-2 lg:grid-cols-5">
+      <input aria-label="Plan name" placeholder="Plan name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none focus:border-indigo-500/50" />
+      <input aria-label="Student limit" type="number" min="1" placeholder="Student limit" value={form.studentLimit} onChange={(event) => setForm({ ...form, studentLimit: event.target.value })} className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none focus:border-indigo-500/50" />
+      <input aria-label="Duration in days" type="number" min="1" placeholder="Duration in days" value={form.durationDays} onChange={(event) => setForm({ ...form, durationDays: event.target.value })} className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none focus:border-indigo-500/50" />
+      <input aria-label="Price" placeholder="Price (for example, Free)" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm outline-none focus:border-indigo-500/50" />
+      <button disabled={saving} className="rounded-xl bg-indigo-500 px-4 py-3 text-sm font-semibold hover:bg-indigo-400 disabled:opacity-60">{saving ? "Saving…" : "Add plan"}</button>
+    </form>
+    {plans.length === 0 ? <div className="rounded-2xl border border-white/10 bg-white/[.03] p-6 text-sm text-slate-400">No plans are configured yet. Add a plan above to save it to the database.</div> : <div className="grid gap-4 md:grid-cols-3">{plans.map((plan) => <article key={plan.id} className="glass rounded-2xl p-6">
+      <div className="flex items-center justify-between"><h3 className="text-lg font-bold">{plan.name}</h3><span className={`rounded-full px-2.5 py-1 text-xs ${plan.active === false ? "bg-slate-500/10 text-slate-400" : "bg-emerald-500/10 text-emerald-300"}`}>{plan.active === false ? "Inactive" : "Active"}</span></div>
+      <div className="mt-6 space-y-3 text-sm"><div className="flex justify-between"><span className="text-slate-500">Student limit</span><b>{plan.studentLimit}</b></div><div className="flex justify-between"><span className="text-slate-500">Duration</span><b>{plan.durationDays} days</b></div><div className="flex justify-between"><span className="text-slate-500">Price</span><b>{plan.price}</b></div></div>
+      <div className="mt-6 flex gap-2"><button type="button" onClick={() => togglePlan(plan)} className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-sm hover:bg-white/5">{plan.active === false ? "Activate" : "Deactivate"}</button><button type="button" onClick={() => setDeleteTarget(plan)} className="rounded-lg px-3 py-2 text-sm text-rose-300 hover:bg-rose-500/10">Delete</button></div>
+    </article>)}</div>}
+    <p className="mt-5 rounded-xl border border-amber-500/10 bg-amber-500/5 p-4 text-sm leading-6 text-amber-200/80">Plans are stored for administration. Payments and automatic student-limit enforcement are not enabled.</p>
+    <ConfirmDialog open={Boolean(deleteTarget)} title={`Delete ${deleteTarget?.name || "this plan"}?`} message="This plan will be permanently removed from Firestore. This action cannot be undone. Are you sure?" onCancel={() => setDeleteTarget(null)} onConfirm={() => removePlan(deleteTarget)} />
+  </main>;
+}
+
+function AdminSettings() {
+  return <main className="mx-auto max-w-4xl p-5 md:p-8"><h2 className="text-2xl font-bold">Admin Settings</h2><p className="mt-2 text-sm leading-6 text-slate-400">Administrator access is checked against the configured Firebase account and Firestore security rules. Teacher records, support messages and plans are stored in Cloud Firestore.</p><div className="mt-6 rounded-2xl border border-white/10 bg-white/[.03] p-5"><h3 className="font-semibold">Sign-in providers</h3><p className="mt-2 text-sm leading-6 text-slate-400">Email and Google sign-in must be enabled in Firebase Authentication. To allow this deployed website to sign in, add its domain to Firebase Authentication's authorized domains.</p></div></main>;
 }

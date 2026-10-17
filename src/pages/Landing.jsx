@@ -12,7 +12,7 @@ const features = [
 ];
 
 const faqs = [
-  ["Can I manage more than one class?", "You can set a class name in Settings. Student records can also include their class and section."],
+  ["Can I set a class name?", "Yes. Set the active class name in Settings. Student records can also include their class and section."],
   ["How are grades calculated?", "GradeFlow calculates a percentage from the marks entered for each subject and assigns a grade based on the result bands shown in the Results section."],
   ["How is a student marked as passing?", "A student must meet or exceed the passing marks set for every subject to pass."],
   ["Can other teachers see my student records?", "Teacher records are stored under the signed-in teacher's account and access is controlled by Firebase security rules."],

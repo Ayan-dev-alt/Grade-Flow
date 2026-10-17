@@ -7,6 +7,7 @@ import {
   subscribeSupportMessages,
   sendTeacherSupportMessage,
   logout,
+  getFriendlyErrorMessage,
 } from "../firebase/firebase";
 
 export default function SuspendedContact() {
@@ -20,7 +21,7 @@ export default function SuspendedContact() {
 
   useEffect(() => {
     if (!session?.uid) return undefined;
-    return subscribeSupportMessages(session.uid, setMessages, () => setError("Could not load your support messages. Please try again."));
+    return subscribeSupportMessages(session.uid, setMessages, (loadError) => setError(getFriendlyErrorMessage(loadError, "We couldn't load your support messages. Refresh the page and try again.")));
   }, [session?.uid]);
 
   const send = async (event) => {
@@ -32,15 +33,19 @@ export default function SuspendedContact() {
       await sendTeacherSupportMessage(session.uid, session, message);
       setMessage("");
     } catch (sendError) {
-      setError(sendError.message || "Your message could not be sent.");
+      setError(getFriendlyErrorMessage(sendError, "Your message couldn't be sent. Check your connection and try again."));
     } finally {
       setSending(false);
     }
   };
 
   const signOut = async () => {
-    await logout();
-    navigate("/auth", { replace: true });
+    try {
+      await logout();
+      navigate("/auth", { replace: true });
+    } catch (signOutError) {
+      setError(getFriendlyErrorMessage(signOutError, "We couldn't sign you out. Check your connection and try again."));
+    }
   };
 
   return (

@@ -155,7 +155,6 @@ export default function Auth() {
   };
 
   const isPendingApproval = searchParams.get("status") === "pending";
-  const isSuspended = searchParams.get("status") === "suspended";
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -328,13 +327,6 @@ export default function Auth() {
             {isPendingApproval && (
               <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
                 This account is awaiting administrator activation. If you think this is a mistake, contact the administrator.
-              </div>
-            )}
-
-            {isSuspended && (
-              <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-                Your account has been temporarily suspended. Please contact the
-                admin to reactivate it.
               </div>
             )}
 

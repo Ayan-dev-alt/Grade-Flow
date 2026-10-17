@@ -51,7 +51,7 @@ function getStudentSummary(student, subjects) {
   const totalObtained = entries.reduce((sum, item) => sum + item.obtained, 0);
   const totalPossible = entries.reduce((sum, item) => sum + item.totalMarks, 0);
   const percentage = totalPossible ? (totalObtained / totalPossible) * 100 : 0;
-  const isPass = entries.every((item) => item.isPass);
+  const isPass = entries.length > 0 && entries.every((item) => item.isPass);
   const grade = gradeFromPercentage(percentage);
 
   return {
@@ -70,6 +70,7 @@ export default function TeacherDashboard() {
   const [teacherData, setTeacherData] = useState(defaultData);
   const [complaints, setComplaints] = useState([]);
   const [dataError, setDataError] = useState("");
+  const [dataLoading, setDataLoading] = useState(true);
   const ready = useRef(false);
   const lastSaved = useRef("");
 
@@ -80,8 +81,14 @@ export default function TeacherDashboard() {
       const normalized = { ...defaultData, ...data, subjects: data.subjects || [], students: data.students || [] };
       lastSaved.current = JSON.stringify(normalized);
       ready.current = true;
+      setDataLoading(false);
+      setDataError("");
       setTeacherData(normalized);
-    }, (error) => setDataError(getFriendlyErrorMessage(error, "We couldn't load your class records. Refresh the page and try again.")));
+    }, (error) => {
+      ready.current = false;
+      setDataLoading(false);
+      setDataError(getFriendlyErrorMessage(error, "We couldn't load your class records. Refresh the page and try again."));
+    });
     const stopComplaints = subscribeComplaints(uid, setComplaints, (error) => setDataError(getFriendlyErrorMessage(error, "We couldn't load your complaints. Refresh the page and try again.")));
     return () => { stopData(); stopComplaints(); stopPresence(); };
   }, [uid]);
@@ -99,12 +106,17 @@ export default function TeacherDashboard() {
   }, [uid, teacherData]);
 
   const addStudent = (student) => {
+    const rollNo = student.rollNo.trim();
+    if (teacherData.students.some((item) => String(item.rollNo).trim().toLowerCase() === rollNo.toLowerCase())) {
+      setDataError("This roll number is already in use. Enter a different roll number.");
+      return false;
+    }
     const nextStudent = {
-      id: student.rollNo || `${Date.now()}`,
-      rollNo: student.rollNo,
-      name: student.name,
-      className: student.className,
-      section: student.section,
+      id: rollNo,
+      rollNo,
+      name: student.name.trim(),
+      className: student.className.trim(),
+      section: student.section.trim(),
       gender: student.gender,
       marks: makeEmptyMarks(teacherData.subjects),
     };
@@ -113,15 +125,28 @@ export default function TeacherDashboard() {
       ...previous,
       students: [...previous.students, nextStudent],
     }));
+    setDataError("");
+    return true;
   };
 
   const addSubject = (subject) => {
+    const name = subject.name.trim();
+    const totalMarks = Number(subject.totalMarks);
+    const passingMarks = Number(subject.passingMarks);
+    if (!name || !Number.isFinite(totalMarks) || totalMarks <= 0 || !Number.isFinite(passingMarks) || passingMarks < 0 || passingMarks > totalMarks) {
+      setDataError("Enter a subject name, a total mark greater than zero, and passing marks between zero and the total.");
+      return false;
+    }
     const normalized = {
-      id: (subject.name || "subject").toLowerCase().replace(/\s+/g, "-"),
-      name: subject.name,
-      totalMarks: Number(subject.totalMarks) || 100,
-      passingMarks: Number(subject.passingMarks) || 40,
+      id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+      name,
+      totalMarks,
+      passingMarks,
     };
+    if (teacherData.subjects.some((item) => item.id === normalized.id)) {
+      setDataError("A subject with this name already exists. Choose a different name.");
+      return false;
+    }
 
     setTeacherData((previous) => ({
       ...previous,
@@ -134,6 +159,8 @@ export default function TeacherDashboard() {
         },
       })),
     }));
+    setDataError("");
+    return true;
   };
 
   const updateStudentMarks = (studentId, subjectId, value) => {
@@ -189,7 +216,7 @@ export default function TeacherDashboard() {
       <div className="lg:pl-64">
         <Header />
         {dataError && <div role="alert" className="mx-5 mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm leading-6 text-rose-200">{dataError}</div>}
-        <Routes>
+        {dataLoading ? <main className="mx-auto max-w-7xl p-8 text-sm text-slate-400">Loading your class records…</main> : <Routes>
           <Route index element={<Overview teacherData={teacherData} />} />
           <Route
             path="students"
@@ -250,7 +277,7 @@ export default function TeacherDashboard() {
               />
             }
           />
-        </Routes>
+        </Routes>}
       </div>
     </div>
   );
@@ -271,7 +298,7 @@ function Header() {
     }
     return subscribeTeacherNotifications(currentUser.uid, setAllNotifications, (error) => setNotificationError(getFriendlyErrorMessage(error, "We couldn't load your notifications. Refresh the page and try again.")));
   }, [currentUser?.uid]);
-  const notifications = useMemo(() => allNotifications.filter((item) => item.targetType === "all" || item.recipient?.toLowerCase() === currentName.toLowerCase()), [allNotifications, currentName]);
+  const notifications = useMemo(() => allNotifications.filter((item) => item.targetType === "all" || item.recipientId === currentUser?.uid || (!item.recipientId && item.recipient?.toLowerCase() === currentName.toLowerCase())), [allNotifications, currentName, currentUser?.uid]);
   const unreadNotifications = useMemo(() => notifications.filter((item) => !item.readAt), [notifications]);
 
   useEffect(() => {
@@ -442,27 +469,14 @@ function Overview({ teacherData }) {
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="glass rounded-2xl p-6 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-bold">Performance Overview</h3>
-              <p className="mt-1 text-xs text-slate-500">
-                Current class result trend
-              </p>
-            </div>
-            <span className="rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-400">
-              +{passRate}%
-            </span>
-          </div>
-          <div className="mt-8 flex h-48 items-end gap-2">
-            {[32, 45, 38, 61, 54, 73, 68, 84, 76, 92, 87, 98].map(
-              (height, index) => (
-                <div
-                  key={index}
-                  className="flex-1 rounded-t-lg bg-indigo-500/40 transition hover:bg-indigo-400/70"
-                  style={{ height: `${height}%` }}
-                />
-              ),
-            )}
+          <h3 className="font-bold">Class outcomes</h3>
+          <p className="mt-1 text-xs text-slate-500">Calculated from your current student results.</p>
+          <div className="mt-7 space-y-5">
+            {[["Passed", passedStudents, "bg-emerald-400"], ["Needs improvement", totalStudents - passedStudents, "bg-rose-400"]].map(([label, count, color]) => <div key={label}>
+              <div className="mb-2 flex justify-between text-sm"><span className="text-slate-300">{label}</span><span className="text-slate-400">{count} of {totalStudents}</span></div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/10"><div className={`h-full rounded-full ${color}`} style={{ width: `${totalStudents ? (count / totalStudents) * 100 : 0}%` }} /></div>
+            </div>)}
+            {totalStudents === 0 && <p className="text-sm text-slate-500">Add students and enter their marks to see class outcomes.</p>}
           </div>
         </div>
 
@@ -505,7 +519,7 @@ function Students({ students, className, onAddStudent, onDeleteStudent }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!form.rollNo || !form.name) return;
-    onAddStudent(form);
+    if (!onAddStudent(form)) return;
     setForm({
       rollNo: "",
       name: "",
@@ -664,7 +678,7 @@ function Subjects({ subjects, onAddSubject, onDeleteSubject }) {
   const handleSubmit = (event) => {
     event.preventDefault();
     if (!form.name) return;
-    onAddSubject(form);
+    if (!onAddSubject(form)) return;
     setForm({ name: "", totalMarks: "100", passingMarks: "40" });
   };
 
@@ -1116,9 +1130,7 @@ function Complaints({ students, complaints, onAddComplaint }) {
     }
   };
 
-  const myComplaints = complaints.filter(
-    (complaint) => complaint.reporterName === reporterName,
-  );
+  const myComplaints = complaints;
 
   return (
     <main className="mx-auto max-w-6xl p-5 md:p-8">
